@@ -1,0 +1,867 @@
+#+STARTUP: beamer
+#+TITLE: Low-rank approximation of matrices & tensor with application to dynamical and optimization problems
+#+AUTHOR: I. V. Oseledets
+#+DATE: 17 March 2015
+#+LaTeX_CLASS: beamer
+#+LATEX_HEADER: \documentclass{beamer}[14pt, presentation]
+#+LaTeX_HEADER: \institute{{  Skolkovo Institute of Science and Technology \vskip 6mm  Institute of Numerical Mathematics, Russian Academy of Sciences}}
+#+LATEX_HEADER: \usepackage{tikz,pgfplots}
+#+LATEX_HEADER: \pgfplotsset{compat=1.8}
+#+LATEX_HEADER: \usetikzlibrary{calc,patterns,decorations.pathreplacing,decorations.markings,decorations.pathmorphing}
+#+LATEX_HEADER: \usepackage{mypgf}
+#+LATEX_HEADER: \usetheme{boxes}
+#+OPTIONS: toc:nil H:2
+#+COLUMNS: %45ITEM %10BEAMER_env(Env) %10BEAMER_act(Act) %4BEAMER_col(Col) %8BEAMER_opt(Opt)
+#+STARTUP: overview
+#+STARTUP: hidestars
+* LATEX OPTIONS 						   :noexport:
+#+OPTIONS: toc:nil
+** Packages
+#+LATEX_HEADER: \usepackage{mathtools}
+#+LATEX_HEADER: \usepackage{graphicx}
+#+LATEX_HEADER: \usepackage{amsfonts}
+#+LATEX_HEADER: \usepackage{color}
+#+LATEX_HEADER: \usepackage{algorithmic} \usepackage[ruled]{algorithm}
+#+LATEX_HEADER: \usepackage{concrete}
+#+LATEX_HEADER: \usepackage{relsize}
+#+LATEX_HEADER: \usepackage{accents}
+#+LATEX_HEADER: \usepackage{tikz}
+#+LATEX_HEADER:  \usetikzlibrary{positioning,fit,shapes,arrows}
+#+LATEX_HEADER: \usepackage[version=3]{mhchem} %For the chemical formulas
+#+LATEX_HEADER: \usepackage[resetlabels]{multibib}
+#+LATEX_HEADER: \setbeamertemplate{bibliography entry title}{}
+#+LATEX_HEADER: \setbeamertemplate{bibliography entry location}{}
+#+LATEX_HEADER: \setbeamertemplate{bibliography entry note}{}
+#+LATEX_HEADER: \setbeamertemplate{bibliography item}{\insertbiblabel}
+#+LATEX_HEADER: \newcites{prep}{A}
+#+LATEX_HEADER: \newcites{pub}{B}
+#+LATEX_HEADER: \newcites{talks}{C}
+#+LATEX_HEADER: \newcites{sems}{C}
+#+LATEX_HEADER: \centering
+** User-defined symbols
+#+LATEX_HEADER: \def\A{\mathbf{A}}
+#+LATEX_HEADER: \def\V{\mathbf{V}}
+#+LATEX_HEADER: \def\B{\mathbf{B}}
+#+LATEX_HEADER: \def\C{\mathbf{C}}
+#+LATEX_HEADER: \def\rank{\mathop{\mathrm{rank}}\nolimits}
+#+LATEX_HEADER: \def\reshap{\mathrm{reshape}}
+#+LATEX_HEADER: \DeclareMathOperator*{\RP}{\Join}
+#+LATEX_HEADER: \DeclareMathOperator*{\TProd}{\otimes}
+#+LATEX_HEADER: \newcommand{\CoreInd}[2]{#1_{#2}}
+#+LATEX_HEADER: \newcommand*{\dt}[1]{\accentset{\mbox{\large\bfseries .}}{#1}}
+#+LATEX_HEADER: \def\calM{\mathcal{M}}
+#+LATEX_HEADER: \def\calR{\mathcal{R}}
+
+
+
+** Mikhalev pictures
+#+LATEX_HEADER: \input{../pictures/pics/include.tex}
+** Kazeev-defined symbols
+#+LATEX_HEADER: \newcommand{\SumMultInd}[2]{\sum_{\MultInd{#1}\in\MultIndSet{#2}}}
+#+LATEX_HEADER: \newcommand{\IProd}[2]{\left\langle#1,#2\right\rangle}
+#+LATEX_HEADER: \newcommand{\MConj}[1]{{#1}^{\ast}}
+#+LATEX_HEADER: \newcommand{\MTran}[1]{{#1}^{\top}}
+#+LATEX_HEADER: \newcommand{\MInv}[1]{{#1}^{-1}}
+#+LATEX_HEADER: \newcommand{\SpMin}[1]{\boldsymbol{\lambda_{\min}}\left(#1\right)}
+#+LATEX_HEADER: \newcommand{\SpMax}[1]{\boldsymbol{\lambda_{\max}}\left(#1\right)}
+#+LATEX_HEADER: \DeclareMathOperator{\Rank}{rank}
+#+LATEX_HEADER: \DeclareMathOperator{\Cond}{cond}
+#+LATEX_HEADER: \DeclareMathOperator{\Diag}{diag}
+#+LATEX_HEADER: \DeclareMathOperator{\Tridiag}{tridiag}
+#+LATEX_HEADER: \DeclareMathOperator{\Span}{span}
+#+LATEX_HEADER: \newcommand{\DiscrRange}[2]{#1,\ldots,#2}
+#+LATEX_HEADER: \newcommand{\InDiscrRange}[2]{=\DiscrRange{#1}{#2}}
+#+LATEX_HEADER: \newcommand{\NotInDiscrRange}[2]{\ne\DiscrRange{#1}{#2}}
+#+LATEX_HEADER: \newcommand{\DiscrRangeSet}[2]{\Set{#1, \ldots ,#2}}
+#+LATEX_HEADER: \newcommand{\InDiscrRangeSet}[2]{\in\DiscrRangeSet{#1}{#2}}
+#+LATEX_HEADER: \newcommand{\NotInDiscrRangeSet}[2]{\notin\DiscrRangeSet{#1}{#2}}
+#+LATEX_HEADER: \newcommand{\ContRange}[2]{\left[#1,#2\right]}
+#+LATEX_HEADER: \newcommand{\InContRange}[2]{\in\ContRange{#1}{#2}}
+#+LATEX_HEADER: \newcommand{\Par}[1]{\left(#1\right)}
+#+LATEX_HEADER: \newcommand{\SqBr}[1]{\left[#1\right]}
+#+LATEX_HEADER: \newcommand{\CuBr}[1]{\left\{#1\right\}}
+#+LATEX_HEADER: \newcommand{\Set}[1]{\left\{#1\right\}}
+#+LATEX_HEADER: \newcommand{\Vector}[1]{#1}
+#+LATEX_HEADER: \newcommand{\Tensor}[1]{#1}
+#+LATEX_HEADER: \newcommand{\VEl}[1]{{}_{#1}}
+#+LATEX_HEADER: \newcommand{\MEl}[2]{{}_{\substack{#1 \\ #2}}}
+#+LATEX_HEADER: \newcommand{\CEl}[2]{{}_{#1}}
+#+LATEX_HEADER: \newcommand{\TenInd}[2]{#1_{#2}}
+#+LATEX_HEADER: \newcommand{\VecIndEl}[3]{#1_{#2\;}{}_{\substack{\\[2pt] #3}}}
+#+LATEX_HEADER: \newcommand{\MatrIndEl}[4]{#1_{#2\;}{}_{\substack{\\[2pt] #3 \\ #4}}}
+#+LATEX_HEADER: \newcommand{\CoreIndEl}[3]{#1_{#2}\Par{#3}}
+#+LATEX_HEADER: \newcommand{\El}[1]{\Par{#1}}
+#+LATEX_HEADER: \newcommand{\Core}[1]{#1}
+#+LATEX_HEADER: \newcommand{\ElTensor}[2]{\Tensor{#1}\left(#2\right)}
+#+LATEX_HEADER: \newcommand{\ElCP}[3]{\Core{#1}\left(#3,#2\right)}
+#+LATEX_HEADER: \newcommand{\ElTT}[4]{\Core{#1}\left(#2,#4,#3\right)}
+#+LATEX_HEADER: \newcommand{\EllTT}[3]{\Core{#1}\left(#3,#2\right)}
+#+LATEX_HEADER: \newcommand{\ElrTT}[3]{\Core{#1}\left(#2,#3\right)}
+#+LATEX_HEADER: \newcommand{\Kron}[2]{\KronSym\left(#1,#2\right)}
+#+LATEX_HEADER: \newcommand{\NullBlock}{}
+#+LATEX_HEADER: \newcommand{\VoidBlock}{\phantom{I}}
+#+LATEX_HEADER: \newcommand{\Block}[2]{#1_{#2}}
+#+LATEX_HEADER: \newcommand{\SubBlock}[3]{#1^{(#2)}_{#3}}
+#+LATEX_HEADER: \newcommand{\Tenkm}[3]{\Tensor{#1}^{#2}_{#3}}
+#+LATEX_HEADER: \newcommand{\Tenm}[2]{\Tensor{#1}_{#2}}
+#+LATEX_HEADER: \newcommand{\TenPk}[2]{\Tensor{#1}^{(#2)}}
+#+LATEX_HEADER: \newcommand{\TenPkm}[3]{\Tensor{#1}^{(#2)}_{#3}}
+#+LATEX_HEADER: \newcommand{\TenBk}[2]{\Tensor{#1}^{[#2]}}
+#+LATEX_HEADER: \newcommand{\TenBkm}[3]{\Tensor{#1}^{[#2]}_{#3}}
+#+LATEX_HEADER: \newcommand{\Vecm}[2]{\Vector{#1}_{#2}}
+#+LATEX_HEADER: \newcommand{\VecPk}[2]{\Tensor{#1}^{(#2)}}
+#+LATEX_HEADER: \newcommand{\VecPkm}[3]{\Tensor{#1}^{(#2)}_{#3}}
+#+LATEX_HEADER: \newcommand{\VecBk}[2]{\Tensor{#1}^{[#2]}}
+#+LATEX_HEADER: \newcommand{\VecBkm}[3]{\Tensor{#1}^{[#2]}_{#3}}
+#+LATEX_HEADER: \newcommand{\MatrixWTT}{\mathcal{W}}
+#+LATEX_HEADER: \newcommand{\FiltersWTT}{\mathcal{F}}
+
+** HTML export
+#+MATHJAX: align:"left" mathml:t path:"http://orgmode.org/mathjax/MathJax.js"
+
+** Disable navigation bar
+#+LATEX_HEADER: \setbeamertemplate{navigation symbols}{}
+
+* XELATEX OPTIONS :noexport:
+#+LATEX_HEADER: \usepackage{polyglossia}   %% загружает пакет многоязыковой вёрстки
+#+LATEX_HEADER: \setdefaultlanguage{english}  %% устанавливает главный язык документа
+#+LATEX_HEADER:\defaultfontfeatures{Ligatures=TeX,Mapping=tex-text,Scale=1.2}  %% свойства шрифтов по умолчанию
+#+LATEX_HEADER: \setmainfont[Ligatures={TeX,Historic}]{Minion Pro} %% задаёт основной шрифт документа
+#+LATEX_HEADER: \setsansfont{Minion Pro}                    %% задаёт шрифт без засечек
+#+LATEX_HEADER: \setmonofont{Minion Pro}               %% задаёт моноширинный шрифт
+#+LATEX_HEADER: %\newfontfamily\humor{Humor Sans}
+** Some tweaks
+#+LATEX_HEADER: \let\acute\relax
+#+LATEX_HEADER: \let\grave\relax
+#+LATEX_HEADER: \let\ddot\relax
+#+LATEX_HEADER: \let\tilde\relax
+#+LATEX_HEADER: \let\bar\relax
+#+LATEX_HEADER: \let\breve\relax
+#+LATEX_HEADER: \let\check\relax
+#+LATEX_HEADER: \let\hat\relax
+#+LATEX_HEADER: \let\dot\relax
+#+LATEX_HEADER: \let\mathring\relax
+
+* BEAMER OPTIONS :noexport:
+** Customize beamer
+#+LATEX_HEADER: \usepackage{skoltech}
+
+* Talk plan :noexport:
+
+
+* Outline
+** Outline of the talk
+- Brief recap of ``low-rank'' in 2D and nD
+- Dynamical low-rank approximation: KSL scheme
+- KSL scheme and optimization 
+
+* Main part
+** Separation of variables
+ 
+* Our story
+** Motivation
+*** Head 1							  :B_onlyenv:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <1>
+    :END:
+ \alert{Main point}
+- High-dimensional problems appear in many applications
+- Standard methods do not scale well with $d$
+*** Equations							  :B_onlyenv:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <2>
+    :END:
+#+begin_latex
+Solving differential / integral equations on fine grids
+  \vskip 2mm
+ Typical cost: \alert{$\mathcal{O}(N^3)$} $\rightarrow$
+  \alert{$\mathcal{O}(N)$} or \alert{$\mathcal{O}(\log^{\alpha} N)$}.
+#+end_latex
+#+attr_latex: :width 0.8\linewidth
+  [[file:../pictures/3d_lshape_light.pdf]]
+*** Ab initio							  :B_onlyenv:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <3>
+    :END:
+Ab initio computations and computational material design
+#+begin_src latex
+\begin{columns}
+\begin{column}{0.45\linewidth}
+Protein-ligand docking
+\includegraphics[width=\linewidth]{../pictures/protein-ligand.pdf}
+\end{column}
+\begin{column}{0.45\linewidth}
+Solving the Hartree-Fock equation (great progress: V. Khoromskaya, B. Khoromskij; the picture is from our HF-solver)
+    \resizebox{\textwidth}{!}{\includegraphics{../pictures/ethanol-eps-converted-to.pdf}}
+\end{column}
+\end{columns}
+#+end_src
+*** Reduced order models					  :B_onlyenv:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <4>
+    :END:
+Model reduction
+#+begin_src latex
+\begin{columns}
+\begin{column}{0.45\linewidth}
+\includegraphics[width=\linewidth]{../pictures/circles2.pdf}
+\end{column}
+\begin{column}{0.45\linewidth}
+\alert{Diffusion equation (Kressner, Tobler)} 
+\vskip 2mm
+$\nabla a(p) \Delta u = f(p)$, \\
+$p = (p_1,p_2,p_3,p_4)$ \\
+Approximate $u$ from few snapshots.
+\end{column}
+\end{columns}
+#+end_src
+
+*** Data mining and compression					  :B_onlyenv:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <5>
+    :END:
+#+begin_src latex
+Data compression and mining
+\begin{columns}
+\begin{column}{0.45\linewidth}
+Картинки
+\includegraphics[width=\linewidth]{../pictures/lena512_90.pdf}
+\end{column}
+\begin{column}{0.45\linewidth}
+Computational data compression
+\includegraphics[width=\linewidth]{../pictures/ocean.png}
+\end{column}
+\end{columns}
+#+end_src
+
+** An ad
+ \begin{small}
+Biological modelling:  \\ 
+V. Kazeev, M. Khammash, M. Nip., C. Schwab 
+ \vskip 2mm
+ \end{small}
+ #+attr_latex: height=0.4\textheight
+ [[file:../pictures/graphsColor/cycle.pdf]]
+
+- tensor method: $10^3 - 10^4$ on a notebook in  MATLAB
+- 1500 cores, Monte-Carlo: $10^5$-sec
+
+** Main problem
+\alert{We need to approximate high-dimensional tensors}
+** Separation of variables
+One of the few fruitful ideas is \alert{separation of variables} \vskip 2mm
+Main task: \alert{how to do it numerically?}
+** Canonical format
+Starting point: \alert{CP-format} \vskip 2mm
+$A(i_1,\ldots,i_d) = \sum_{\alpha=1}^r U_1(i_1,\alpha) \ldots U_d(i_d,
+\alpha)$
+\vskip 2mm
+\alert{No robust algorithms}: best approximation with fixed rank may
+not exist!
+** Everything is good in 2D
+2D: $A = UV^{\top}$, we have the Singular Value Decomposition \vskip
+2mm
+We want the methods of such quality in many dimensions!
+** TT \& HT formats
+   Independently, in 2009 two formats were proposed: 
+- Tree-Tucker (O. \& Tyrtyshnikov) became the Tensor Train;
+- HT-format (Hackbusch, Kuhn, Grasedyck).
+Both are based on the hierarchical separation of indices
+\vskip 2mm
+** TT-format
+$A(i_1,\ldots,i_d) = G_1(i_1) G_2(i_2) \ldots G_d(i_d)$, \vskip 2mm
+where $G_k(i_k)$ --- matrix of size $r_{k-1} \times r_k$.
+* One more story
+** Tensor networks, MPS(1)
+Other areas: \vskip 2mm
+TT is Matrix product states 
+\vskip 2mm (Used to represent spin wavefunctions)
+\vskip 2mm
+$H \psi = E \psi$ \vskip 2mm
+$\psi = \psi(S_1, \ldots, S_N)$ --- spin system \vskip 2mm
+Algorithms  (Wilson renormalization group, Density Matrix
+Renormalization Group) were proposed a lot earlier.  \\
+Vidal, Cirac, Verstraete, \ldots
+\vskip 2mm
+Brought to mathematics by T. Huckle and R. Schneider
+** Tensor networks, MPS(2)
+DMRG, MPS,  tensor networks: \vskip 2mm
+Big community, brilliant algorithms for eigenvalues / time-dependent
+problems / eigenvalue problems
+* One more story
+** Markov random fields
+Markov random fields (wiki picture) \\
+#+attr_latex: :height 0.4\textheight
+[[file:../pictures/Markov_random_field_example.png]]
+Edge corresponds to a function $\psi_{AD}$, 
+\vskip 2mm
+$p(A, B, C, D, E) = \psi_{AD} \psi_{AB} \psi_{DE} \psi_{CE}$ \vskip 2mm
+Algorithm: \alert{belief propagation for trees!}
+** Recent successes
+Linear tree $\rightarrow$ \alert{hidden markov models}
+\vskip 2mm
+Spectral methods for learning HMM (Hsu, Kakade, 2009) are based on the
+singular value decomposition
+* TT-format
+** Definition
+  Tensor is said  in the TT-format, if 
+  \vskip 2mm
+  $A(i_1,\ldots,i_d) = G_1(i_1)G_2(i_2) \ldots G_d(i_d)$,
+  \vskip 2mm
+  where $G_k(i_k)$ --- matrix of size $r_{k-1} \times r_k$, $r_0 = r_d = 1$
+  \\
+  $r_k$ are called \alert{TT-ranks} \\
+  $G_k(i_k)$ (which are $r_{k-1} \times n_k \times r_k$ tensors)
+  are called  \alert{cores}
+** TT in a nutshell
+- $\mathbf{A}$ --- canonical rank $r$ \rightarrow $r_k \leq r$
+- TT-ranks are matrix ranks, \textcolor{purple}{TT-SVD}
+- All arithmetic, linear in $d$, polynomial in $r$
+- Fast \textcolor{purple}{\sc tensor rounding}
+- TT-cross, \textcolor{purple}{exact interpolation formula}, recent:
+  quasioptimality results (D. Savostyanov)
+- Q(Quantics, Quantized)-TT decomposition --- binarization (or
+  tensorization) of vectors and matrices (B. Khoromskij, O.)
+- TT-Toolbox -- software, S. V. Dolgov, I.V. Oseledets,
+  D. V. Savostyanov, V. A. Kazeev
+** TT-ranks --- matrix ranks
+*** Unfoldings definition					     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <1-2>
+    :END:
+ Define unfoldings: \\
+ $A_k = A(i_1 \ldots i_k; i_{k+1} \ldots i_d)$, $n^k \times n^{d-k}$
+ matrix
+*** TT-ranks are matrix ranks					     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <2>
+    :END:
+   Theorem: There exists a TT-decomposition with TT-ranks
+   $$r_k = \rank A_k$$
+*** Proof							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <3>
+    :END:
+   The proof is constructive and gives the TT-SVD algorithm (Vidal
+   algorithm in quantum information)
+*** Stability estimate						     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <4>
+    :END:
+   There is no exact low ranks need stability estimate! \\
+**** Approximation theorem 					  :B_theorem:
+     :PROPERTIES:
+     :BEAMER_env: theorem
+     :END:
+  If $A_k = R_k + E_k$, $||E_k|| = \varepsilon_k$
+  $$||\mathbf{A}-\mathbf{TT}||_F \leq \sqrt{\sum_{k=1}^{d-1} \varepsilon^2_k}.$$
+
+** Fast linear algebra 
+*** Basic statement						     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <1>
+    :END:
+ Addition, Hadamard product, scalar product \\
+ All linear in $d$ \\
+*** Example: Hadamard product 					     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <2>
+    :END:
+   $C(i_1,\ldots,i_d) = A(i_1,\ldots,i_d) B(i_1,\ldots,i_d)$ \\
+   $$C_k(i_k) = A_k(i_k) \otimes B_k(i_k),$$
+   ranks are multiplied
+** Tensor rounding
+*** Statement							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <1>
+    :END:
+  $\mathbf{A}$ is given in  TT-format with suboptimal ranks. \\
+  Who to reapproximate? \\
+*** Answer							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <2>
+    :END:
+  It can be done in $\mathcal{O}(dnr^3)$ operations 
+\vskip 2mm
+** Cross approximation in d-dimensions
+*** Question							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <1-2>
+    :END:
+   What if a tensor is given as a ``black box''?
+   \vskip 2mm
+*** Answer							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <2>
+    :END:
+#+begin_latex
+O., Tyrtyshnikov, 2010: \\
+TT-cross approximation of multidimensional arrays\\
+We can exactly interpolate a rank-$r$ on
+\textcolor{purple}{$\mathcal{O}(dnr^2)$} elements \vskip 2mm
+$\mathcal{I}_k = (i^{(\alpha)}_1,\ldots,i^{(\alpha)}_k)$, \vskip 2mm
+$\mathcal{J}_k = (i^{(\beta)}_k, \ldots,i^{(\alpha)}_d)$
+\vskip 2mm
+$A_k = A(\mathcal{I}_k,i_k,\mathcal{J}_{k+1})$
+#+end_latex
+** Making everything a tensor: QTT
+*** Idea 							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <1>
+    :END:
+- Prequel: E. E. Tyrtyshnikov (2003)
+- I. V. Oseledets (2009)
+- B. N. Khoromskij (2009)
+\vskip 2mm
+  ``Simple'' idea: \textcolor{purple}{to make everything a tensor} (we
+  have  software, need examples)
+*** QTT 							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <2>
+    :END:
+Let $f(x)$ -- function of one variable ($f(x) = \sin x$).
+\vskip 2mm
+If $v$ -- vector of values on a uniform grid with  $2^d$  nodes.
+\vskip 2mm
+Reshape $v$ into a  $2 \times 2 \times \ldots \times 2$
+$d$-dimensional tensor.
+\vskip 2mm
+Compute TT-decomposition!
+\vskip 2mm
+It is a \textcolor{purple}{QTT-format}
+*** Theoretical results						     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <3>
+    :END:
+ If $f(x)$ is such that 
+$$f(x+y) = \sum_{\alpha=1}^r u_{\alpha}(x) v_{\alpha}(y),$$
+then QTT-ranks are bounded by $r$
+\vskip 2mm
+Conclusion: \\
+- $f(x) = \exp(\lambda x)$
+- $f(x) = \sin (\alpha x + \beta)$
+- $f(x)$ - polynom
+- $f(x)$ - Rational function
+
+
+** TT-Toolbox
+Software: http:/github.com/oseledets/TT-Toolbox
+- Basic operations in TT-format
+- Advanced operations in  TT-format (linear systems, eigenvalues,
+  non-stationary probems, interpolation)
+- Main operators
+- Open-source
+- S. V. Dolgov, V. A. Kazeev, I. V. Oseledets, D. V. Savostyanov, ...
+* Applications and main problems
+** Applications and main problems(1)
+High-dimensional linear systems:
+\vskip 2mm
+#+begin_latex
+\alert{
+$Ax = f$, $x = X(i_1, \ldots, i_d)$
+}
+#+end_latex
+\vskip 2mm
+Typical cases:
+- High-dimensional PDE on a tensor-product grid (Chemical master
+  equation, Fokker-Planck equation)
+- Parametric / stochastic PDE:
+  \vskip 2mm
+  $A(p) u(p) = f(p)$, $p = (p_1, \ldots, p_m)$, 
+  \vskip 2mm
+  After discretization:  
+  \vskip 2mm
+  $u = u(i, p_1, \ldots, p_M)$ --- a tensor!
+
+** Applications and main problems (2)
+High-dimensional eigenvalue problems:
+\vskip 2mm
+#+begin_latex
+\alert{
+$Ax = \lambda x$, $x = X(i_1, \ldots, i_d)$}
+#+end_latex
+\vskip 2mm
+Typical cases:
+- Spin systems (classical case, where MPS come from)
+- Vibrational computations, $A = -\frac{1}{2} \Delta + V$
+- Parametric problems (as well). 
+
+** Applications and main problems (3)
+High-dimensional unsteady problems:
+\vskip 2mm
+#+begin_latex
+\alert{$\frac{dy}{dt} = Ay, y = Y(i_1, \ldots, i_d)$}
+#+end_latex
+\vskip 2mm
+Typical cases:
+- Chemical master equation
+- Computation of vibrational spectra
+
+** Applications and main problems (4)
+Interpolation of multivariate functions:
+\vskip 2mm
+$f(x_1, \ldots, x_d)$ is given as a subroutine
+\vskip 2mm
+Typical cases:
+- Global optimization problems
+- Approximation of expensive parametric dependencies
+- Many more...
+
+** Summary
+Several basic problems:
+- $Ax = f$
+- $Ax = \lambda x$
+- $\frac{dy}{dt} = Ay$
+- Interpolation
+The solution is sought on a low-parametric manifold: 
+\vskip 2mm
+General strategy:
+\vskip 2mm
+Reformulate as $J(x) \rightarrow \min$, minimize over a manifold.
+** Summary(2)
+There are \alert{very efficient algorithms} for all type of problems!
+- Linear systems: AMEN-solver (Dolgov, Savostyanov)
+- Eigenvalue solver: AMEN-solver, EIGB-solver (Dolgov, Savostyanov,
+  Oseledets, Khoromskij)
+- Nonstationary case: KSL-scheme (Oseledets, Lubich, Vanderbreycken)
+- Interpolation: AMEN-cross (Dolgov, Savostyanov, Oseledets)
+* TT-KSL scheme
+** Solving non-stationary problems
+Considerable interest:
+\vskip 2mm
+$\frac{dy}{dt} = Ay$,
+\vskip 2mm
+$Y = Y(i_1,\ldots,i_d)$
+\vskip 2mm
+By writing down the equations for the parameters on the manifold!
+\vskip 2mm
+We now have a \alert{very efficient integrator}: \vskip 2mm KSL-scheme
+** Dynamical low-rank approximation
+ Given $A(t)$, approximate by $X(t) \in \mathcal{M}$, \vskip 2mm where
+ $\mathcal{M}$ --- manifold:
+ \vskip 2mm
+Dirac-Frenkel principle:
+ \begin{equation*}
+  (\dt{A} - \dt{X}, v) = 0, \quad v \in \mathcal{T}(\mathcal{M}),
+ \end{equation*}
+ $\mathcal{T}$ is the tangent space.
+ \vskip 2mm
+ \alert{Gives equations of motion}
+** KSL-scheme for the TT-format
+Equation of motions have been derived:
+- Matrix case, Tucker case: (H.-D. Meyer, C. Lubich, O. Koch)
+- TT-format, HT-format (C)
+** Matrix case
+Matrix case
+\vskip 2mm
+\begin{footnotesize}
+C. Lubich, I.V. Oseledets, A projector-splitting integrator for
+dynamical low-rank approximation
+\vskip 2mm
+\end{footnotesize}
+** Dynamical low-rank appr. of matrices
+*** Equations 							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <1>
+    :END:
+    The equations for $U, S, V$: \\
+    \begin{equation*}
+    \begin{split}
+    &\dt{U} = (I - U(t) U(t)^{\top})\dt{A}(t) V(t) S(t) ^{-1}\\
+    &\dt{V} = (I - V(t)V(t)^{\top})\dt{A}(t)^{\top} U(t) S(t)^{-\top} \\
+    &\dt{S} = U(t)^{\top} \dt{A}(t) V(t).
+    \end{split}
+    \end{equation*}
+*** Projector form						     :B_onlyenv:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <2>
+    :END:
+    \begin{equation*}
+    \dt{X} = P_X(\dt A), \quad P_x(\dt A) = \dt A - ( I - UU^{\top}) \dt A( I - VV^{\top}).
+    \end{equation*}
+   No multiplication by $S^{-1}$
+** KSL integrator
+Algorithm:
+- K-step: $\dt{(US)} = \dt{A} V$ 
+- QR: $K_1 = U_1 \widehat{S}_1$ 
+- S-step: $\dt{S} = -U^{\top} \dt{A} V$ (backward in time!)
+- L-step: $\dt{(VS^{\top})} = \dt{A}^{\top} U$
+- QR: $L_1 = U_1 \widetilde{S}_1$
+** TT-KSL integrator
+Just apply the KSL scheme recursively!
+#+begin_src latex
+\tikzstyle{index} = [minimum size =8em, rectangle, every
+ edge/.style={link}]
+ \tikzstyle{lab} = [minimum width =8em, rectangle, every edge/.style={link}]
+ \newsavebox{\mycircle}
+\savebox{\mycircle}{
+ \begin{tikzpicture}
+\begin{scope}
+\filldraw[fill=black, draw=black] (0,0) arc (-90-45:90-45:1) -- (0,0);  
+\filldraw[fill=white, draw=black] (0,0) arc (-90-45:-270-45:1) -- (0,0);
+\end{scope}
+\end{tikzpicture}}
+\newsavebox{\qrcirc}
+\savebox{\qrcirc}{
+\begin{tikzpicture}
+\filldraw[fill=black,draw=black] circle(0.5);
+\end{tikzpicture}}
+\newsavebox{\mycir}
+\savebox{\mycir}{
+\begin{tikzpicture}
+\filldraw[fill=black, draw=black] (0,0) arc (-90+45:90+45:1) -- (0,0);  
+\filldraw[fill=white, draw=black] (0,0) arc (-90+45:-270+45:1) -- (0,0);
+\end{tikzpicture}}
+\newsavebox{\mysun}
+\savebox{\mysun}{\begin{tikzpicture}[align=center]
+\pgfmathsetmacro{\myrad}{0.5}
+\begin{scope}
+\filldraw[fill=white, draw=black] (0,0) circle (\myrad);
+\foreach \an in {0,30,...,360} 
+  \draw (\myrad*cos \an, \myrad*sin \an) -- (2*\myrad*cos \an, 2*\myrad*sin \an);
+\end{scope}
+\end{tikzpicture}}
+
+ \begin{tikzpicture}
+ %Variables
+\pgfmathsetmacro{\mysc}{0.2}
+\pgfmathsetmacro{\sepf}{2.5}
+\pgfmathsetmacro{\sepT}{1}
+\pgfmathsetmacro{\myh}{0.5}
+ \node[lab] (A0) {Update $X_1$};
+ \begin{scope}[scale=\mysc, transform shape]
+ \node[index] (i01) [right = \sepT of A0]  {\usebox{\mysun}};
+ \node[index] (i02) [right = \sepf of i01] {\usebox{\mycircle}};
+ \node[index] (i03) [right = \sepf of i02] {\usebox{\mycircle}};
+ \node[index] (i04) [right = \sepf of i03] {\usebox{\mycircle}};
+ \path[-] (i01) edge (i02);
+ \path[-] (i02) edge (i03);
+ \path[-] (i03) edge (i04);
+ \end{scope}
+ \node[lab] (A1) [below= \myh of A0] {QR $\rightarrow$};
+ \begin{scope}[scale=\mysc, transform shape]
+ \node[index] (i11) [right = \sepT of A1]  {\usebox{\mycir}};
+ \node[index] (i12) [right = \sepf of i11] {\usebox{\mycircle}};
+ \node[index] (i13) [right = \sepf of i12] {\usebox{\mycircle}};
+ \node[index] (i14) [right = \sepf of i13] {\usebox{\mycircle}};
+ \path[draw=black] (i11) -- (i12) node[midway,index] {\usebox{\qrcirc}}; 
+ \path[-] (i12) edge (i13);
+ \path[-] (i13) edge (i14);
+ \end{scope}
+ \node[lab] (A2) [below= \myh of A1] {Update S};
+ \begin{scope}[scale=\mysc, transform shape]
+ \node[index] (i41) [right = \sepT of A2]  {\usebox{\mycir}};
+ \node[index] (i42) [right = \sepf of i41] {\usebox{\mycircle}};
+ \node[index] (i43) [right = \sepf of i42] {\usebox{\mycircle}};
+ \node[index] (i44) [right = \sepf of i43] {\usebox{\mycircle}};
+ \path[draw=black] (i41) -- (i42) node[midway,index,scale=0.7]{\usebox{\mysun}};
+ \path[-] (i42) edge (i43);
+ \path[-] (i43) edge (i44);
+ \end{scope}
+
+ \node[lab] (A3) [below= \myh of A2] {Update $X_2$};
+ \begin{scope}[scale=\mysc, transform shape]
+ \node[index] (i21) [right = \sepT of A3]  {\usebox{\mycir}};
+ \node[index] (i22) [right = \sepf of i21] {\usebox{\mysun}};
+ \node[index] (i23) [right = \sepf of i22] {\usebox{\mycircle}};
+ \node[index] (i24) [right = \sepf of i23] {\usebox{\mycircle}};
+ \draw (i21) -- (i22); 
+ \draw (i22) -- (i23); 
+ \draw (i23) -- (i24); 
+ \end{scope}
+\end{tikzpicture}
+#+end_src
+** KSL and MCTDH 
+*** Problem statement						     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <1>
+    :END:
+ $\frac{d \psi}{dt} = i H \psi, \quad \psi(0) = \psi_0$ \vskip 2mm
+ $H = -\frac{1}{2} \Delta + V$, \vskip 2mm
+ Local problems: 
+\vskip 2mm 
+ Small linear ODEs
+ \vskip 2mm
+ Compute $a(t) = (\psi(t), \psi(0))$ and the spectrum of $H$ from it. 
+*** Numerical experiments					     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <2>
+    :END:
+\begin{small}
+            \textcolor{purple}{$ V(q_1,\ldots,q_f) = \frac{1}{2}\sum_{k=1}^f q^2_k + \lambda \sum_{k=1}^{f-1}\left(q^2_k q_{k+1} - \frac{1}{3}q^3_k \right).$}
+\end{small}
+ http://www.pci.uni-heidelberg.de/cms/mctdh.html  
+#+attr_latex: width = 8cm
+[[../pictures/mctdh-ksl-comp.pdf]]
+
+* Data compression
+** Relation to wavelets
+The idea of QTT has a deep connection to \alert{wavelets}
+- I. V. Oseledets, E. E. Tyrtyshnikov, Algebraic wavelet transform via
+  quantics tensor train decomposition
+- V. A. Kazeev,  Oseledets, I. V. , The tensor structure of a class of
+  adaptive algebraic wavelet transforms 
+- Boris N. Khoromskij,  Sentao Miao, Superfast Wavelet Transform Using QTT Approximation. I: Haar Wavelets
+
+
+
+You can use \alert{WTT} as a general compression technique!
+** Ocean temperature
+*** Data							    
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <1>
+    :END:
+The temperature (4-d array), computed using the INM-RAS global
+circulation model \\
+Array of size $360 \times 337 \times 40 \times 648$ --- 12 Gb.
+#+attr_latex: :height 0.6\linewidth
+[[file:../pictures/ocean.png]]
+*** Compression							  
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <2>
+    :END:
+#+begin_src latex
+\begin{table}[H]
+\begin{small}
+ \begin{center}
+  \begin{tabular}{cccc}
+   Memory & Abs err & Rel err & Comp time\\
+   497 MB & 0.0392 & 0.0004 & $\approx 500$ sec \\
+   277 MB & 0.0984  & 0.0009 & $\approx 500$ sec \\
+  \end{tabular}
+ \caption{WTT decomposition compression}
+ \end{center}
+\end{small}
+\end{table}
+#+end_src
+
+* Latent variable models
+** Latent variable models
+*** Start							  :B_onlyenv:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <1-3>
+    :END:
+Interesting applications
+ \vskip 2mm 
+ \alert{latent variable models}
+*** Problem(1)							  :B_onlyenv:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <2-3>
+    :END:
+Observe $S_1,\ldots,S_N$ (stock prices) 
+\vskip 2mm
+And here are the hidden variables
+*** Problem(2)							  :B_onlyenv:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_acts: <3>
+    :END:
+ $p(x_1,x_2) = \sum_{\alpha=1}^r p_1(x_1,h) w(h) p_2(x_2,h)$
+ \vskip 2mm 
+  You can use tensors! (Ishteva, Le Song, Georgia Tech.)
+*** Picture							  :B_onlyenv:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <4>
+    :END:
+Recovering the tree
+\vskip 3mm
+(M. Ishteva, Le Song)
+#+latex_attr: width=\linewidth height=\textheight
+[[file:../pictures/ishteva-pic.pdf]]
+
+* Global optimization
+** Global optimization
+*** Slide 1							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <1>
+    :END:
+Can we apply it to the global optimization problems?
+\vskip 2mm
+ $f(x_1, \ldots, x_d) \rightarrow \min$
+\vskip 2mm
+``Naive'' idea:
+1) Approximate $f$ by low rank
+2) Find maximum, for example, by $\min (Dx, x) \rightarrow \min$
+
+What if \alert{no approximation exists?}
+*** Slide 2							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <2-3>
+    :END:
+The cross approximation method has a potential to find maximal
+absolute value!
+*** Slide 3							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <3>
+    :END:
+\begin{theorem}{}
+   Let $A$ be an $n \times m$ matrix, $\widehat{A}$ is an $r \times r$
+   submatrix with maximal volume, then
+   $$
+       ||\widehat{A}||_C \geq \frac{ ||A||_C}{r^2 + r}. 
+   $$
+\end{theorem}
+
+*** Slide 4 							     :B_only:
+    :PROPERTIES:
+    :BEAMER_env: onlyenv
+    :BEAMER_act: <4>
+    :END:
+To force to the global minimum, we do shifts and transforms:
+\begin{equation*}
+   \widetilde{f} = \mathrm{arcctg}(f - f^* ),
+\end{equation*}
+where $f^*$ is the current record. 
+\vskip 2mm
+\alert{Just run the standard dD-cross method, and compute maximal over all
+the samples!}
+
+** Conclusions
+- Numerical algorithms are developing at fast rate
+- High potential impact in many applications (biology, optimization, chemistry)
+- Theory is trailing behind
+** Software
+#+begin_latex
+ Papers and codes: 
+\begin{large}
+\begin{itemize} 
+\item My webpage: \textcolor{purple}{http://spring.inm.ras.ru/osel}
+\item Publications: \textcolor{purple}{http://pub.inm.ras.ru}
+\item TT-Toolbox
+\textcolor{purple}{http://github.com/oseledets/TT-Toolbox},  \textcolor{purple}{http://github.com/oseledets/ttpy}
+\end{itemize}
+\end{large}
+#+end_latex
+
+
+
