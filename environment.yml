@@ -6,6 +6,8 @@ dependencies:
 - rise
 - numpy
 - cython
+- gcc
+- libgfortran
 - pip:
   - autograd
   - matplotlib
