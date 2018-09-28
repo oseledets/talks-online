@@ -4,6 +4,7 @@ channels:
 - defaults
 dependencies:
 - rise
+- numpy
 - pip:
   - autograd
   - matplotlib
