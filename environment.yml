@@ -5,6 +5,7 @@ channels:
 dependencies:
 - rise
 - numpy
+- cython
 - pip:
   - autograd
   - matplotlib
